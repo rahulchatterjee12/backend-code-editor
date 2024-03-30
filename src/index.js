@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 // 3. Testing APIs
 
-app.post("/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Working fine");
 });
 
