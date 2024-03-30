@@ -7,6 +7,7 @@ const {
 } = require("./config/exceptionHandlers/handler.js");
 const routes = require("./routes");
 const bodyParser = require("body-parser");
+var cookieParser = require("cookie-parser");
 // 1.Database , app and PORT setup
 const dbConnection = require("./dbConn/mongoose");
 
@@ -17,6 +18,7 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // 3. Testing APIs
 

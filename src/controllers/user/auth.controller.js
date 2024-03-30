@@ -99,9 +99,8 @@ module.exports.logout = async (req, res, next) => {
     // Authenticated user ID attached on `req` by authentication middleware
     const userId = req.userId;
     const user = await User.findById(userId);
-
     const cookies = req.cookies;
-    // const authHeader = req.header("Authorization");
+    const authHeader = req.header("Authorization");
     const refreshToken = cookies[REFRESH_TOKEN.cookie.name];
     // Create a access token hash
     const rTknHash = crypto
@@ -164,7 +163,6 @@ module.exports.refreshAccessToken = async (req, res, next) => {
   try {
     const cookies = req.cookies;
     const authHeader = req.header("Authorization");
-
     if (!cookies[REFRESH_TOKEN.cookie.name]) {
       throw new AuthorizationError(
         "Authentication error!",
@@ -204,8 +202,8 @@ module.exports.refreshAccessToken = async (req, res, next) => {
 
     const userWithRefreshTkn = await User.findOne({
       _id: decodedRefreshTkn._id,
-      "tokens.token": staleAccessTkn,
     });
+
     if (!userWithRefreshTkn) {
       throw new AuthorizationError(
         "Authentication Error",
@@ -264,57 +262,58 @@ module.exports.forgotPassword = async (req, res, next) => {
 
     const resetPath = req.header("X-reset-base");
     const origin = req.header("Origin");
+    console.log(origin);
 
-    const resetUrl = resetPath
-      ? `${resetPath}/${resetToken}`
-      : `${origin}/resetpass/${resetToken}`;
-    console.log("Password reset URL: %s", resetUrl);
+    // const resetUrl = resetPath
+    //   ? `${resetPath}/${resetToken}`
+    //   : `${origin}/resetpass/${resetToken}`;
+    // console.log("Password reset URL: %s", resetUrl);
 
-    const message = `
-            <h1>You have requested to change your password</h1>
-            <p>You are receiving this because someone(hopefully you) has requested to reset password for your account.<br/>
-              Please click on the following link, or paste in your browser to complete the password reset.
-            </p>
-            <p>
-              <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
-            </p>
-            <p>
-              <em>
-                If you did not request this, you can safely ignore this email and your password will remain unchanged.
-              </em>
-            </p>
-            <p>
-            <strong>DO NOT share this link with anyone else!</strong><br />
-              <small>
-                <em>
-                  This password reset link will <strong>expire after ${
-                    RESET_PASSWORD_TOKEN.expiry || 5
-                  } minutes.</strong>
-                </em>
-              <small/>
-            </p>
-        `;
+    // const message = `
+    //         <h1>You have requested to change your password</h1>
+    //         <p>You are receiving this because someone(hopefully you) has requested to reset password for your account.<br/>
+    //           Please click on the following link, or paste in your browser to complete the password reset.
+    //         </p>
+    //         <p>
+    //           <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+    //         </p>
+    //         <p>
+    //           <em>
+    //             If you did not request this, you can safely ignore this email and your password will remain unchanged.
+    //           </em>
+    //         </p>
+    //         <p>
+    //         <strong>DO NOT share this link with anyone else!</strong><br />
+    //           <small>
+    //             <em>
+    //               This password reset link will <strong>expire after ${
+    //                 RESET_PASSWORD_TOKEN.expiry || 5
+    //               } minutes.</strong>
+    //             </em>
+    //           <small/>
+    //         </p>
+    //     `;
 
-    try {
-      await sendEmail({
-        to: user.email,
-        html: message,
-        subject: "Reset password",
-      });
+    // try {
+    //   await sendEmail({
+    //     to: user.email,
+    //     html: message,
+    //     subject: "Reset password",
+    //   });
 
-      res.json({
-        message:
-          "An email has been sent to your email address. Check your email, and visit the link to reset your password",
-        success: true,
-      });
-    } catch (error) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordTokenExpiry = undefined;
-      await user.save();
+    //   res.json({
+    //     message:
+    //       "An email has been sent to your email address. Check your email, and visit the link to reset your password",
+    //     success: true,
+    //   });
+    // } catch (error) {
+    //   user.resetPasswordToken = undefined;
+    //   user.resetPasswordTokenExpiry = undefined;
+    //   await user.save();
 
-      console.log(error.message);
-      throw new CustomError("Email not sent", 500);
-    }
+    //   console.log(error.message);
+    //   throw new CustomError("Email not sent", 500);
+    // }
   } catch (err) {
     next(err);
   }
