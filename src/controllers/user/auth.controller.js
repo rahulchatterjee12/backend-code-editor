@@ -56,7 +56,6 @@ module.exports.login = async (req, res, next) => {
       accessToken,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
@@ -89,7 +88,7 @@ module.exports.signup = async (req, res, next) => {
       accessToken,
     });
   } catch (error) {
-    // console.log(error);
+    // ;
     next(error);
   }
 };
@@ -125,7 +124,6 @@ module.exports.logout = async (req, res, next) => {
       success: true,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
@@ -154,7 +152,6 @@ module.exports.logoutAllDevices = async (req, res, next) => {
       success: true,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
@@ -232,7 +229,6 @@ module.exports.refreshAccessToken = async (req, res, next) => {
       accessToken,
     });
   } catch (error) {
-    console.log(error);
     if (error?.name === "JsonWebTokenError") {
       return next(
         new AuthorizationError(error, "You are unauthenticated", {
@@ -366,7 +362,6 @@ module.exports.resetPassword = async (req, res, next) => {
       success: true,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };

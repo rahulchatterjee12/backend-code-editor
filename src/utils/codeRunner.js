@@ -1,45 +1,109 @@
-const { exec } = require("child_process");
+const { exec, execFile, spawn } = require("child_process");
+const fs = require("fs");
 
-const codeRunner = (code, input, lang) => {
-  let command;
-  switch (lang) {
-    case "python":
-      command = `python3 -c "${code}"`;
-      break;
-    case "cpp":
-      // Compile C++ code first
-      command = `g++ -o temp/cpp_exec temp/cpp_exec.cpp && ./temp/cpp_exec`;
-      break;
-    case "c":
-      // Compile C code first
-      command = `gcc -o temp/c_exec temp/c_exec.c && ./temp/c_exec`;
-      break;
-    case "javascript":
-      // For JavaScript, simply execute the code with Node.js
-      command = `node -e "${code}"`;
-      break;
-    default:
-      return res.status(400).json({ error: "Invalid language specified" });
-  }
-
-  let output;
-
-  const child = exec(command);
-
-  if (input) {
-    child.stdin.write(input);
-  }
-
-  child.stdout.on("data", (data) => {
-    if (data) {
-      console.log(data);
-      return data;
+const codeRunner = async (code, input, lang, res) => {
+  if (lang === "python") {
+    // Compile Python code
+    command = `python3 -c "${code}"`;
+    const child = exec(command);
+    if (input !== "") {
+      child.stdin.write(input);
+      child.stdin.end();
     }
-  });
+    child.stdout.on("data", (data) => {
+      if (data) {
+        res.status(200).json({ output: data });
+      }
+    });
+  } else if (lang === "cpp") {
+    // Compile C++ code
 
-  child.stdout.on("error", (error) => {
-    if (error) return error;
-  });
+    fs.writeFile("src/temp/main.cpp", code, (err) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      console.log(`File main.cpp created successfully.`);
+    });
+
+    exec("g++ src/temp/main.cpp", (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+
+      const child = spawn("./a.out");
+      child.stdin.write(input);
+      child.stdin.end();
+      child.stdout.on("data", (data) => {
+        res.status(200).json(data.toString());
+
+        // delete code files
+        fs.unlink("src/temp/main.cpp", (error) => {
+          if (error) {
+          } else {
+            console.log("File main.cpp deleted successfully");
+          }
+        });
+
+        fs.unlink("a.out", (error) => {
+          if (error) {
+          } else {
+            console.log("File a.out deleted successfully");
+          }
+        });
+      });
+    });
+  } else if (lang === "c") {
+    // Compile C code
+    fs.writeFile("src/temp/main.c", code, (err) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      console.log(`File main.cpp created successfully.`);
+    });
+
+    exec("gcc src/temp/main.c", (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+
+      const child = spawn("./a.out");
+      child.stdin.write(input);
+      child.stdin.end();
+      child.stdout.on("data", (data) => {
+        console.log(data);
+        res.status(200).json(data.toString());
+
+        // delete code files
+        fs.unlink("src/temp/main.cpp", (error) => {
+          if (error) {
+          } else {
+            console.log("File main.cpp deleted successfully");
+          }
+        });
+
+        fs.unlink("a.out", (error) => {
+          if (error) {
+          } else {
+            console.log("File a.out deleted successfully");
+          }
+        });
+      });
+    });
+  } else {
+    return res.status(400).json({ error: "Invalid language specified" });
+  }
 };
 
 module.exports = codeRunner;

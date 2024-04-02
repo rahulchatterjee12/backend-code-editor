@@ -1,9 +1,7 @@
 const express = require("express");
 const Code = require("../models/Code");
-const User = require("../models/User");
 
 const { requireAuthentication } = require("../middlewares/authCheck");
-const CustomError = require("../config/errors/CustomError");
 const codeRunner = require("../utils/codeRunner");
 
 const router = express.Router();
@@ -14,7 +12,17 @@ router.get("/", requireAuthentication, async (req, res, next) => {
     const codes = await Code.find({ author: userId });
     res.status(200).json(codes);
   } catch (error) {
-    console.log(error);
+    next(error);
+  }
+});
+
+router.get("/:id", requireAuthentication, async (req, res, next) => {
+  try {
+    const codeId = req.params.id;
+    const code = await Code.findById(codeId);
+
+    res.status(200).json(code);
+  } catch (error) {
     next(error);
   }
 });
@@ -23,11 +31,8 @@ router.get("/run", requireAuthentication, async (req, res, next) => {
   try {
     const { code, input, language } = req.body;
 
-    output = codeRunner(code, input, language);
-    console.log(output);
-    res.status(200).json();
+    output = codeRunner(code, input, language, res);
   } catch (error) {
-    console.log(error);
     next(error);
   }
 });
@@ -50,7 +55,6 @@ router.post("/create", requireAuthentication, async (req, res, next) => {
     await newCode.save();
     res.status(201).json(newCode);
   } catch (error) {
-    console.log(error);
     next(error);
   }
 });
@@ -73,7 +77,6 @@ router.patch("/update", requireAuthentication, async (req, res, next) => {
     );
     res.status(201).json(updatedCode);
   } catch (error) {
-    console.log(error);
     next(error);
   }
 });

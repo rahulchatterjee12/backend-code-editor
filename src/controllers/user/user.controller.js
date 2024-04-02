@@ -21,7 +21,6 @@ module.exports.fetchUserProfile = async (req, res, next) => {
       user: retrievedUser,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
@@ -39,7 +38,6 @@ module.exports.fetchAuthUserProfile = async (req, res, next) => {
       user,
     });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
