@@ -1,4 +1,4 @@
-const { exec, execFile, spawn } = require("child_process");
+const { exec, spawn } = require("child_process");
 const fs = require("fs");
 
 const codeRunner = async (code, input, lang, res) => {
@@ -41,7 +41,6 @@ const codeRunner = async (code, input, lang, res) => {
       child.stdin.end();
       child.stdout.on("data", (data) => {
         res.status(200).json(data.toString());
-
         // delete code files
         fs.unlink("src/temp/main.cpp", (error) => {
           if (error) {
@@ -82,14 +81,13 @@ const codeRunner = async (code, input, lang, res) => {
       child.stdin.write(input);
       child.stdin.end();
       child.stdout.on("data", (data) => {
-        console.log(data);
         res.status(200).json(data.toString());
 
         // delete code files
-        fs.unlink("src/temp/main.cpp", (error) => {
+        fs.unlink("src/temp/main.c", (error) => {
           if (error) {
           } else {
-            console.log("File main.cpp deleted successfully");
+            console.log("File main.c deleted successfully");
           }
         });
 

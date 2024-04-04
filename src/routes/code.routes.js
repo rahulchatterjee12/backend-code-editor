@@ -2,7 +2,6 @@ const express = require("express");
 const Code = require("../models/Code");
 
 const { requireAuthentication } = require("../middlewares/authCheck");
-const codeRunner = require("../utils/codeRunner");
 
 const router = express.Router();
 
@@ -22,16 +21,6 @@ router.get("/:id", requireAuthentication, async (req, res, next) => {
     const code = await Code.findById(codeId);
 
     res.status(200).json(code);
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get("/run", requireAuthentication, async (req, res, next) => {
-  try {
-    const { code, input, language } = req.body;
-
-    output = codeRunner(code, input, language, res);
   } catch (error) {
     next(error);
   }
@@ -59,9 +48,11 @@ router.post("/create", requireAuthentication, async (req, res, next) => {
   }
 });
 
-router.patch("/update", requireAuthentication, async (req, res, next) => {
+router.patch("/update/:id", requireAuthentication, async (req, res, next) => {
   try {
-    const { filename, code, codeId, language, input, output, expected_output } =
+    const codeId = req.params.id;
+
+    const { filename, code, language, input, output, expected_output } =
       req.body;
 
     const updatedCode = await Code.updateOne(
@@ -75,7 +66,23 @@ router.patch("/update", requireAuthentication, async (req, res, next) => {
         expected_output,
       }
     );
-    res.status(201).json(updatedCode);
+    res.status(200).json(updatedCode);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/delete/:id", requireAuthentication, async (req, res, next) => {
+  try {
+    const codeId = req.params.id;
+
+    const results = await Code.deleteOne({ _id: codeId });
+
+    if (results.deletedCount === 1) {
+      res.status(200).json(`File deleted successfully!`);
+    } else {
+      res.status(400).json("Unable to delete the File");
+    }
   } catch (error) {
     next(error);
   }

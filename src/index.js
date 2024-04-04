@@ -10,6 +10,7 @@ const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 // 1.Database , app and PORT setup
 const dbConnection = require("./dbConn/mongoose");
+const codeRunner = require("./utils/codeRunner.js");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -24,6 +25,18 @@ app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Working fine");
+});
+
+// Run Code
+app.get("/api/code/run", async (req, res, next) => {
+  try {
+    const { code, input, language } = req.body;
+    console.log("code runner");
+    console.log(req.body);
+    output = codeRunner(code, input, language, res);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use("/api", routes);
