@@ -12,12 +12,12 @@ const codeRunner = async (code, input, lang, res) => {
     }
     child.stdout.on("data", (data) => {
       if (data) {
-        res.status(200).json({ output: data });
+        res.status(200).json(data.toString());
+        return;
       }
     });
   } else if (lang === "cpp") {
     // Compile C++ code
-
     fs.writeFile("src/temp/main.cpp", code, (err) => {
       if (err) {
         console.log(err);
@@ -102,6 +102,7 @@ const codeRunner = async (code, input, lang, res) => {
   } else {
     return res.status(400).json({ error: "Invalid language specified" });
   }
+  // return res.status(400).json({ error: "Something went wrong" });
 };
 
 module.exports = codeRunner;

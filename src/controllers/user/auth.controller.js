@@ -53,6 +53,7 @@ module.exports.login = async (req, res, next) => {
     res.json({
       success: true,
       user,
+      refreshToken,
       accessToken,
     });
   } catch (error) {
@@ -158,9 +159,10 @@ module.exports.logoutAllDevices = async (req, res, next) => {
 
 module.exports.refreshAccessToken = async (req, res, next) => {
   try {
-    const cookies = req.cookies;
+    const tokens = req.body;
     const authHeader = req.header("Authorization");
-    if (!cookies[REFRESH_TOKEN.cookie.name]) {
+    console.log(authHeader, tokens);
+    if (!tokens[REFRESH_TOKEN.cookie.name]) {
       throw new AuthorizationError(
         "Authentication error!",
         "You are unauthenticated",
@@ -171,20 +173,7 @@ module.exports.refreshAccessToken = async (req, res, next) => {
         }
       );
     }
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new AuthorizationError(
-        "Authentication Error",
-        "You are unauthenticated!",
-        {
-          realm: "reauth",
-          error: "invalid_access_token",
-          error_description: "access token error",
-        }
-      );
-    }
-
-    const accessTokenParts = authHeader.split(" ");
-    const staleAccessTkn = accessTokenParts[1];
+    const staleAccessTkn = tokens.accessTkn;
 
     const decodedExpiredAccessTkn = jwt.verify(
       staleAccessTkn,
@@ -194,7 +183,7 @@ module.exports.refreshAccessToken = async (req, res, next) => {
       }
     );
 
-    const rfTkn = cookies[REFRESH_TOKEN.cookie.name];
+    const rfTkn = tokens[REFRESH_TOKEN.cookie.name];
     const decodedRefreshTkn = jwt.verify(rfTkn, REFRESH_TOKEN.secret);
 
     const userWithRefreshTkn = await User.findOne({

@@ -28,12 +28,10 @@ app.get("/", (req, res) => {
 });
 
 // Run Code
-app.get("/api/code/run", async (req, res, next) => {
+app.post("/api/code/run", async (req, res, next) => {
   try {
-    const { code, input, language } = req.body;
-    console.log("code runner");
-    console.log(req.body);
-    output = codeRunner(code, input, language, res);
+    const { code, input, language } = req.body.data;
+    codeRunner(code, input, language, res);
   } catch (error) {
     next(error);
   }
