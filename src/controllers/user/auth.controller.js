@@ -99,9 +99,8 @@ module.exports.logout = async (req, res, next) => {
     // Authenticated user ID attached on `req` by authentication middleware
     const userId = req.userId;
     const user = await User.findById(userId);
-    const cookies = req.cookies;
-    const authHeader = req.header("Authorization");
-    const refreshToken = cookies[REFRESH_TOKEN.cookie.name];
+    const refreshToken = req.body.refreshTkn;
+
     // Create a access token hash
     const rTknHash = crypto
       .createHmac("sha256", REFRESH_TOKEN.secret)
@@ -159,10 +158,10 @@ module.exports.logoutAllDevices = async (req, res, next) => {
 
 module.exports.refreshAccessToken = async (req, res, next) => {
   try {
-    const tokens = req.body;
-    const authHeader = req.header("Authorization");
-    console.log(authHeader, tokens);
-    if (!tokens[REFRESH_TOKEN.cookie.name]) {
+    const cookies = { refreshTkn: req.body.refreshTkn };
+    const authHeader = `Bearer ${req.body.accessTkn}`;
+
+    if (!cookies[REFRESH_TOKEN.cookie.name]) {
       throw new AuthorizationError(
         "Authentication error!",
         "You are unauthenticated",
@@ -173,7 +172,20 @@ module.exports.refreshAccessToken = async (req, res, next) => {
         }
       );
     }
-    const staleAccessTkn = tokens.accessTkn;
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new AuthorizationError(
+        "Authentication Error",
+        "You are unauthenticated!",
+        {
+          realm: "reauth",
+          error: "invalid_access_token",
+          error_description: "access token error",
+        }
+      );
+    }
+
+    const accessTokenParts = authHeader.split(" ");
+    const staleAccessTkn = accessTokenParts[1];
 
     const decodedExpiredAccessTkn = jwt.verify(
       staleAccessTkn,
@@ -183,7 +195,7 @@ module.exports.refreshAccessToken = async (req, res, next) => {
       }
     );
 
-    const rfTkn = tokens[REFRESH_TOKEN.cookie.name];
+    const rfTkn = cookies[REFRESH_TOKEN.cookie.name];
     const decodedRefreshTkn = jwt.verify(rfTkn, REFRESH_TOKEN.secret);
 
     const userWithRefreshTkn = await User.findOne({
@@ -216,6 +228,7 @@ module.exports.refreshAccessToken = async (req, res, next) => {
     res.json({
       success: true,
       accessToken,
+      refreshTkn: cookies.refreshTkn,
     });
   } catch (error) {
     if (error?.name === "JsonWebTokenError") {

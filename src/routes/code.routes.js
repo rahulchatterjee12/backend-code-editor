@@ -28,8 +28,9 @@ router.get("/:id", requireAuthentication, async (req, res, next) => {
 
 router.post("/create", requireAuthentication, async (req, res, next) => {
   try {
-    const { filename, code, userId, language, input, output, expected_output } =
+    const { filename, code, language, input, output, expected_output } =
       req.body;
+    const userId = req.userId;
 
     const newCode = new Code({
       filename,
