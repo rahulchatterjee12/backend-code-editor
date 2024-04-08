@@ -9,8 +9,7 @@ const EMAIL = {
 async function main(mailOptions) {
   // Create reusable transporter object using the default SMTP transport
   const transporter = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: "gmail",
     auth: {
       user: EMAIL.authUser,
       pass: EMAIL.authPass,
